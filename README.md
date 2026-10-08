@@ -1,6 +1,3 @@
-# CantaSync
-🎵 Mobile app to search and download song lyrics from multiple sources. Early development, debug builds only.
-
 # 🎵 CantaSync
 
 Aplicación nativa para Android que busca **letras sincronizadas por línea** en LRCLIB. Permite seguir la canción que está sonando y guardar la letra como archivo `.lrc`.
