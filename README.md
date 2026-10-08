@@ -29,8 +29,6 @@ Otras fuentes, como Musixmatch, NetEase y Megalobiz, no están integradas todav�
 - **API objetivo actual:** Android 14 (API 34).
 - **Dispositivo probado:** Samsung Galaxy S24 Ultra con Android 16.
 
-> La API objetivo actual deberá actualizarse antes de publicar CantaSync en Google Play.
-
 ## 🛠️ Tecnologías
 
 - **Lenguaje:** Java
