@@ -1,59 +1,43 @@
-# 🎵 CantaSync
+# CantaSync
 
-Aplicación nativa para Android que busca **letras sincronizadas por línea** en LRCLIB. Permite seguir la canción que está sonando y guardar la letra como archivo `.lrc`.
+CantaSync busca letras sincronizadas por línea, muestra portadas cuando están disponibles y permite guardar o aplicar las letras como archivos `.lrc`.
 
-> ⚠️ **Estado:** prototipo en desarrollo. La versión actual se ha probado en un dispositivo Android; puede contener errores y todavía no es un lanzamiento estable.
+> **Estado:** `v1.5.3-debug`, versión de prueba. No es un lanzamiento estable; todavía faltan el icono definitivo y más pruebas en dispositivos.
 
-## ✨ Funciones actuales
+## Funciones
 
-- 🔎 Busca letras sincronizadas por título y artista.
-- ✏️ Permite editar el título y el artista antes de buscar, para probar otras coincidencias.
-- 🎼 Muestra las versiones encontradas para que puedas elegir la correcta.
-- 🎤 Detecta el título y el artista de la canción activa en un reproductor compatible, si habilitas el acceso a notificaciones de Android.
-- ⏱️ Resalta y desplaza la vista hasta la línea correspondiente al progreso de reproducción.
-- 💾 Permite guardar la letra elegida como archivo `.lrc`.
+- Buscar letras sincronizadas en [LRCLIB](https://lrclib.net/) y escoger entre coincidencias.
+- Ver portadas de [MusicBrainz](https://musicbrainz.org/) y [Cover Art Archive](https://coverartarchive.org/), o la portada del reproductor activo cuando coincide.
+- Detectar título, artista y progreso de un reproductor compatible mediante el acceso opcional a notificaciones de Android.
+- Copiar letras con marcas de tiempo, guardar un `.lrc` en la carpeta elegida o aplicar la letra creando un `.lrc` junto al MP3, FLAC o WAV correspondiente dentro de `Music` y sus subcarpetas.
+- Elegir apariencia Clara, Oscura o AMOLED.
+- Buscar actualizaciones desde el menú de tres puntos. CantaSync consulta los releases debug de GitHub, descarga el APK, verifica que corresponda a la app y que tenga la misma firma, y luego abre el instalador de Android.
 
-La sincronización disponible es **por línea**, no palabra por palabra. Para resaltar la línea actual, CantaSync necesita acceso al reproductor activo. La búsqueda manual funciona sin habilitar ese acceso.
+La sincronización y el resaltado son por línea, no palabra por palabra. Aplicar una letra crea un archivo `.lrc` separado y no modifica los metadatos del audio.
 
-## 🌐 Fuente de letras
+## Actualizaciones
 
-Actualmente, la app consulta únicamente:
+Abre **⋮ → Buscar actualizaciones**. Si hay una versión nueva, CantaSync la descarga y verifica su paquete y firma antes de iniciar el instalador. Android siempre pide confirmar la instalación y puede solicitar permiso para instalar aplicaciones descargadas por CantaSync. Las actualizaciones requieren la misma firma que la versión instalada.
 
-- [LRCLIB](https://lrclib.net/)
+## Compatibilidad
 
-Otras fuentes, como Musixmatch, NetEase y Megalobiz, no están integradas todavía. Deezer y Lyricsify no forman parte de la versión actual.
+- Android 6.0 (API 23) o posterior.
+- API objetivo: Android 14 (API 34).
+- Fuentes de letras: LRCLIB. MusicBrainz y Cover Art Archive se usan solo para portadas.
 
-## 📱 Compatibilidad
+## Apariencia y tipografía
 
-- **Android mínimo:** Android 6.0 (API 23).
-- **API objetivo actual:** Android 14 (API 34).
-- **Dispositivo probado:** Samsung Galaxy S24 Ultra con Android 16.
+La paleta combina negro, blanco, morado y cian. AMOLED es el modo inicial. El título solicita Segoe UI Bold si está instalada; el resto usa pesos Medium y Light del sistema. La app no incluye una copia de Segoe UI.
 
-## 🛠️ Tecnologías
+## Permisos
 
-- **Lenguaje:** Java
-- **Plataforma:** Android nativo con Android SDK
-- **Interfaz:** componentes nativos de Android
-- **Compilación:** Gradle y Android Gradle Plugin
+- **Internet:** buscar letras, portadas y releases de GitHub.
+- **Acceso al reproductor:** opcional; permite detectar la canción y sincronizar el resaltado.
+- **Instalación de APK:** Android puede pedir permiso para abrir el instalador de una actualización descargada desde el release de GitHub.
 
-## 🔐 Permisos
+## Licencia
 
-- **Internet:** necesario para buscar letras en LRCLIB.
-- **Acceso a notificaciones/sesiones multimedia:** opcional; permite detectar la canción activa y seguir su reproducción.
+El proyecto todavía no tiene una licencia de código abierto asignada. Todos los derechos están reservados.
 
-Android solicita autorización para el acceso al reproductor. Puedes buscar letras manualmente sin concederla.
+Consulta [CHANGELOG.md](CHANGELOG.md) para los cambios de `v1.5.3-debug`.
 
-## 🚧 Próximos pasos
-
-- [ ] Integrar y evaluar fuentes adicionales de letras sincronizadas.
-- [ ] Probar en más dispositivos y versiones de Android.
-- [ ] Actualizar la API objetivo y preparar una versión para distribución.
-- [ ] Publicar una primera versión estable.
-
-## 📄 Licencia
-
-El proyecto todavía no tiene una licencia de código abierto asignada. Hasta que se añada una, todos los derechos están reservados y no se concede permiso para reutilizar, modificar o distribuir el código.
-
-## 🙌 Atribuciones
-
-Las letras se obtienen de LRCLIB. CantaSync no incluye un catálogo propio de canciones.
