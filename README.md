@@ -2,11 +2,12 @@
 
 CantaSync busca letras sincronizadas por línea, muestra portadas cuando están disponibles y permite guardar o aplicar las letras como archivos .lrc.
 
-> **Estado:** v1.5.4-debug, versión de prueba. Incluye el nuevo icono de CantaSync; sigue sin ser un lanzamiento estable y necesita más pruebas en dispositivos.
+> **Estado:** `v1.5.5-debug`, versión de prueba. Incluye el nuevo icono de CantaSync; sigue sin ser un lanzamiento estable y necesita más pruebas en dispositivos.
 
 ## Funciones
 
 - Buscar letras sincronizadas en [LRCLIB](https://lrclib.net/) y escoger entre coincidencias.
+- Comprobar desde la pantalla principal si LRCLIB responde antes de buscar letras.
 - Ver portadas de [MusicBrainz](https://musicbrainz.org/) y [Cover Art Archive](https://coverartarchive.org/), o la portada del reproductor activo cuando coincide.
 - Detectar título, artista y progreso de un reproductor compatible mediante el acceso opcional a notificaciones de Android.
 - Copiar letras con marcas de tiempo, guardar un archivo .lrc en la carpeta elegida o aplicar la letra creando un .lrc junto al MP3, FLAC o WAV correspondiente dentro de Music y sus subcarpetas.
@@ -40,4 +41,4 @@ La paleta combina negro, blanco, morado y cian. AMOLED es el modo inicial. El t�
 
 El proyecto todavía no tiene una licencia de código abierto asignada. Todos los derechos están reservados.
 
-Consulta [CHANGELOG.md](CHANGELOG.md) para los cambios de v1.5.4-debug.
+Consulta [CHANGELOG.md](CHANGELOG.md) para los cambios de `v1.5.5-debug`.
