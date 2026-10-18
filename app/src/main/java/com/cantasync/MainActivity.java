@@ -62,6 +62,9 @@ import java.security.MessageDigest;
 import java.util.HashSet;
 import java.util.Set;
 import java.net.HttpURLConnection;
+import java.net.ConnectException;
+import java.net.SocketTimeoutException;
+import java.net.UnknownHostException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -79,6 +82,7 @@ public class MainActivity extends Activity {
     private final ExecutorService artworkExecutor = Executors.newSingleThreadExecutor();
     private EditText titleInput, artistInput;
     private TextView status, selectedInfo, lyrics;
+    private Button serviceCheckButton;
     private ImageView heroCover;
     private TextView heroPlaceholder;
     private ScrollView rootScroll, lyricScroll;
@@ -280,6 +284,11 @@ public class MainActivity extends Activity {
         Button detect = new Button(this); detect.setText("Canción Actual"); detect.setAllCaps(false); detect.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL)); detect.setTextColor(ink); detect.setBackgroundTintList(android.content.res.ColorStateList.valueOf(cyan));
         LinearLayout.LayoutParams detectButtonLp = new LinearLayout.LayoutParams(0, -2, 1f); detectButtonLp.leftMargin = dp(4); searchActions.addView(detect, detectButtonLp);
         detect.setOnClickListener(v -> detectPlayingTrack());
+        serviceCheckButton = new Button(this); serviceCheckButton.setText("Comprobar servicio LRCLIB"); serviceCheckButton.setAllCaps(false);
+        serviceCheckButton.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL)); serviceCheckButton.setTextColor(0xFFFFFFFF);
+        serviceCheckButton.setBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFF514B5A));
+        LinearLayout.LayoutParams serviceCheckLp = new LinearLayout.LayoutParams(-1, -2); serviceCheckLp.topMargin = dp(3); serviceCheckLp.bottomMargin = dp(2); page.addView(serviceCheckButton, serviceCheckLp);
+        serviceCheckButton.setOnClickListener(v -> checkLyricsService());
         status = text("Solo mostramos resultados con marcas de tiempo.", 13, muted);
         status.setTypeface(Typeface.create("sans-serif-light", Typeface.NORMAL));
         LinearLayout.LayoutParams statusLp = new LinearLayout.LayoutParams(-1, -2); statusLp.topMargin = dp(10); statusLp.bottomMargin = dp(12); page.addView(status, statusLp);
@@ -474,7 +483,11 @@ public class MainActivity extends Activity {
                     throw new Exception("La firma de esta actualización no coincide con la app instalada. Android no permitirá instalarla sobre esta versión.");
                 long newCode = Build.VERSION.SDK_INT >= 28 ? candidate.getLongVersionCode() : candidate.versionCode;
                 long currentCode = Build.VERSION.SDK_INT >= 28 ? installed.getLongVersionCode() : installed.versionCode;
-                if (newCode <= currentCode) throw new Exception("El APK descargado no tiene un número de versión superior al instalado");
+                if (newCode == currentCode) {
+                    runOnUiThread(() -> { status.setText("CantaSync ya tiene instalada esta versión."); Toast.makeText(this, "Ya tienes esta versión instalada", Toast.LENGTH_SHORT).show(); });
+                    return;
+                }
+                if (newCode < currentCode) throw new Exception("El APK descargado es más antiguo que la versión instalada");
                 runOnUiThread(() -> { pendingUpdateUri = downloadedUri; status.setText("Actualización verificada. Lista para instalar."); askToInstallUpdate(); });
             } catch (Exception e) {
                 String reason = e.getMessage() == null ? "No se pudo verificar el certificado del APK" : e.getMessage();
@@ -551,21 +564,88 @@ public class MainActivity extends Activity {
         status.setText("Buscando coincidencias sincronizadas…"); results.clear();
         copyButton.setVisibility(View.GONE); saveButton.setVisibility(View.GONE); applyButton.setVisibility(View.GONE); lyricActions.setVisibility(View.GONE); resultCard.setVisibility(View.GONE);
         executor.execute(() -> {
+            HttpURLConnection c = null;
             try {
                 String q = "track_name=" + enc(title) + (artist.isEmpty() ? "" : "&artist_name=" + enc(artist));
-                HttpURLConnection c = (HttpURLConnection)new URL("https://lrclib.net/api/search?" + q).openConnection();
+                c = (HttpURLConnection)new URL("https://lrclib.net/api/search?" + q).openConnection();
                 c.setRequestMethod("GET"); c.setConnectTimeout(12000); c.setReadTimeout(15000);
                 c.setRequestProperty("Accept", "application/json"); c.setRequestProperty("Lrclib-App-Id", "CantaSync/0.1 Android");
                 int code = c.getResponseCode();
-                if (code < 200 || code >= 300) throw new Exception("El servicio respondió " + code);
+                if (code == 429) throw new java.io.IOException("LRCLIB está limitando las solicitudes. Espera un poco e inténtalo otra vez.");
+                if (code >= 500) throw new java.io.IOException("LRCLIB no está respondiendo correctamente ahora (HTTP " + code + ").");
+                if (code < 200 || code >= 300) throw new java.io.IOException("LRCLIB respondió con un error (HTTP " + code + ").");
                 StringBuilder body = new StringBuilder();
                 try (BufferedReader r = new BufferedReader(new InputStreamReader(c.getInputStream(), StandardCharsets.UTF_8))) { String line; while ((line = r.readLine()) != null) body.append(line); }
-                c.disconnect(); JSONArray arr = new JSONArray(body.toString()); ArrayList<Track> found = new ArrayList<>();
+                JSONArray arr = new JSONArray(body.toString()); ArrayList<Track> found = new ArrayList<>();
                 for (int i=0; i<arr.length(); i++) { Track t = new Track(arr.getJSONObject(i)); if (!t.lrc.trim().isEmpty()) found.add(t); }
                 runOnUiThread(() -> showResults(found));
-            } catch (Exception ex) { runOnUiThread(() -> status.setText("No se pudo buscar. Comprueba tu conexión e inténtalo otra vez.")); }
+            } catch (SocketTimeoutException ex) {
+                runOnUiThread(() -> status.setText("LRCLIB tardó demasiado en responder. Inténtalo de nuevo en un momento."));
+            } catch (UnknownHostException ex) {
+                runOnUiThread(() -> status.setText("No se pudo encontrar lrclib.net. Comprueba la conexión o el DNS."));
+            } catch (ConnectException ex) {
+                runOnUiThread(() -> status.setText("No se pudo conectar con LRCLIB. El servicio podría estar temporalmente inaccesible."));
+            } catch (Exception ex) {
+                String reason = ex.getMessage();
+                if (reason == null || reason.trim().isEmpty()) reason = "Error inesperado al consultar LRCLIB.";
+                final String message = reason;
+                runOnUiThread(() -> status.setText(message));
+            } finally { if (c != null) c.disconnect(); }
         });
     }
+    private void checkLyricsService() {
+        if (serviceCheckButton == null) return;
+        serviceCheckButton.setEnabled(false);
+        serviceCheckButton.setText("Comprobando LRCLIB…");
+        serviceCheckButton.setBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFF514B5A));
+        status.setText("Comprobando si LRCLIB responde…");
+        executor.execute(() -> {
+            HttpURLConnection connection = null;
+            try {
+                URL endpoint = new URL("https://lrclib.net/api/search?track_name=CantaSync%20status%20check");
+                connection = (HttpURLConnection)endpoint.openConnection();
+                connection.setRequestMethod("GET"); connection.setConnectTimeout(8000); connection.setReadTimeout(8000);
+                connection.setRequestProperty("Accept", "application/json");
+                connection.setRequestProperty("Lrclib-App-Id", "CantaSync/1.5.5 Android");
+                int code = connection.getResponseCode();
+                if (code >= 200 && code < 300) {
+                    runOnUiThread(() -> {
+                        serviceCheckButton.setEnabled(true); serviceCheckButton.setText("LRCLIB disponible · HTTP " + code);
+                        serviceCheckButton.setBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFF168A52));
+                        status.setText("LRCLIB respondió correctamente. Ya puedes buscar letras.");
+                    });
+                } else {
+                    runOnUiThread(() -> showServiceUnavailable(serviceResponseMessage(code)));
+                }
+            } catch (SocketTimeoutException ex) {
+                runOnUiThread(() -> showServiceUnavailable("LRCLIB tardó demasiado en responder. La conexión a internet puede seguir funcionando."));
+            } catch (UnknownHostException ex) {
+                runOnUiThread(() -> showServiceUnavailable("No se pudo encontrar lrclib.net. Comprueba la conexión o el DNS."));
+            } catch (ConnectException ex) {
+                runOnUiThread(() -> showServiceUnavailable("No se pudo abrir una conexión con LRCLIB. Comprueba el servicio o la red."));
+            } catch (Exception ex) {
+                String detail = ex.getMessage();
+                if (detail == null || detail.trim().isEmpty()) detail = "Error inesperado al contactar LRCLIB.";
+                final String message = detail;
+                runOnUiThread(() -> showServiceUnavailable(message));
+            } finally { if (connection != null) connection.disconnect(); }
+        });
+    }
+
+    private String serviceResponseMessage(int code) {
+        if (code == 429) return "LRCLIB está limitando las solicitudes (HTTP 429). Espera un poco e inténtalo otra vez.";
+        if (code >= 500) return "LRCLIB presenta un problema temporal (HTTP " + code + ").";
+        return "LRCLIB respondió con un error (HTTP " + code + ").";
+    }
+
+    private void showServiceUnavailable(String message) {
+        if (serviceCheckButton != null) {
+            serviceCheckButton.setEnabled(true); serviceCheckButton.setText("LRCLIB no disponible · Reintentar");
+            serviceCheckButton.setBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFB3261E));
+        }
+        status.setText(message);
+    }
+
     private String enc(String s) throws Exception { return URLEncoder.encode(s, "UTF-8"); }
     private void showResults(ArrayList<Track> found) {
         results.clear(); results.addAll(found);
