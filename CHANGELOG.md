@@ -1,11 +1,23 @@
 # Changelog
 
+## v1.5.5-debug — 2026-10-18
+
+### Añadido
+
+- Comprobación manual del servicio LRCLIB, con indicador verde cuando responde y rojo cuando no está accesible.
+
+### Corregido y mejorado
+
+- Los errores de búsqueda ahora distinguen tiempos de espera, problemas para resolver el dominio, límites de solicitudes y errores del servidor; ya no atribuyen cualquier fallo a una falta de internet.
+- Si el actualizador vuelve a validar una APK que ya está instalada, informa que la versión ya está actualizada en vez de mostrar un error.
+- Actualización de versión a `1.5.5-debug`.
+
 ## v1.5.4-debug — 2026-10-09
 
 ### Añadido
 
 - Nuevo icono de CantaSync con recursos adaptativos para Android 8.0+ y variantes heredadas para versiones anteriores.
-- Actualización de versión a 1.5.4-debug.
+- Actualización de versión a `1.5.4-debug`.
 
 ## v1.5.3-debug — 2026-10-09
 
